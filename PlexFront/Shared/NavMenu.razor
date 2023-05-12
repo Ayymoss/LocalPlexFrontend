@@ -1,0 +1,25 @@
+﻿<MudPaper Class="d-flex flex-column" Height="100%" Elevation="0">
+    <MudNavMenu Rounded="true" Margin="Margin.Normal" Color="Color.Info" Class="pa-2">
+        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+        <MudNavLink Href="/Torrents" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Download">All Torrents</MudNavLink>
+        <MudNavLink Href="https://request.amosr.uk" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ChevronRight">Plex Requests</MudNavLink>
+    </MudNavMenu>
+    <MudSpacer/>
+    <MudStack Spacing="0">
+        <MudDivider Class="mb-1" FlexItem="true" Light="true" DividerType="DividerType.FullWidth"/>
+        <MudElement Class="d-inline-flex align-center mx-2 mb-1">
+            <MudElement>
+                <MudText Typo="Typo.caption" Class="mud-text-disabled">Plexmos</MudText>
+            </MudElement>
+            <MudSpacer/>
+            <MudElement>
+                <MudText Typo="Typo.caption" Class="mud-text-disabled">@_versionNumber</MudText>
+            </MudElement>
+        </MudElement>
+    </MudStack>
+
+</MudPaper>
+
+@code {
+    private string _versionNumber = Utilities.GetVersionAsString();
+}

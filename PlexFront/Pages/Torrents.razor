@@ -1,0 +1,154 @@
+﻿@page "/Torrents"
+@inject QBitTorrentService TorrentService
+
+<PageTitle>Torrents</PageTitle>
+
+<MudStack Spacing="0">
+    <MudPaper Elevation="2" Class="d-flex flex-row align-center pa-4 rounded-b-0">
+        <MudText Typo="Typo.h4"
+                 Align="Align.Center"
+                 Class="mud-text-secondary mr-4">
+            Torrents
+        </MudText>
+        <MudSpacer/>
+        <MudElement Class="ml-2 mt-0">
+            <MudTextField T="string"
+                          Label="Filter"
+                          Variant="Variant.Outlined"
+                          Value="_searchString"
+                          ValueChanged="OnSearch"
+                          AutoFocus="false"
+                          Adornment="Adornment.End"
+                          Margin="Margin.Dense"
+                          AdornmentColor="Color.Info"
+                          AdornmentIcon="@Icons.Material.Filled.Search"/>
+        </MudElement>
+    </MudPaper>
+    <MudTable Striped="true"
+              HeaderClass="mud-theme-info"
+              Outlined="false"
+              Bordered="false"
+              Loading="_loading"
+              LoadingProgressColor="Color.Info"
+              ServerData="@(new Func<TableState, Task<TableData<TorrentInfo>>>(ServerReload))"
+              Elevation="2"
+              RowsPerPage="20"
+              Dense="true"
+              @ref="_table">
+        <HeaderContent>
+            <MudTh Class="py-2">
+                <MudTableSortLabel SortLabel="Name" T="TorrentInfo">Name</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortLabel="TotalSize" T="TorrentInfo">Total Size</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortLabel="DownloadSpeed" T="TorrentInfo">Download Speed</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortLabel="Progress" T="TorrentInfo">Progress</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortLabel="ETA" T="TorrentInfo">ETA</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortLabel="State" T="TorrentInfo">State</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortLabel="Category" T="TorrentInfo">Category</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortLabel="Availability" T="TorrentInfo">Availability</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortLabel="Added" T="TorrentInfo">Added</MudTableSortLabel>
+            </MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="TotalSize">@($"{context.TotalSize / Math.Pow(1024, 2):N2} MB")</MudTd>
+            <MudTd DataLabel="DownloadSpeed">@(context.Progress < 1 ? context.DownloadSpeed.HumanizeDownloadSpeed() : "Complete")</MudTd>
+            <MudTd DataLabel="Progress">
+                <MudProgressLinear Style="width: 100%; min-width: 250px;"
+                                   Color="@(context.Progress < 1 ? Color.Info : Color.Success)"
+                                   Rounded="true"
+                                   Striped="@(context.Progress < 1 && context.State.ToLower() != "pauseddl")"
+                                   Size="Size.Large"
+                                   Value="@(context.Progress * 100)">
+                    <MudText Typo="Typo.caption" Color="Color.Dark">@FormatProgress(context.Progress)</MudText>
+                </MudProgressLinear>
+            </MudTd>
+            <MudTd DataLabel="ETA">@context.Eta.SecondsToTime().Humanize()</MudTd>
+            <MudTd DataLabel="State">@context.State.Titleize()</MudTd>
+            <MudTd DataLabel="Category">@context.Category.Titleize()</MudTd>
+            <MudTd DataLabel="Availability">@($"{(context.Availability is not -1 ? context.Availability : "N/A"):N2}")</MudTd>
+            <MudTd DataLabel="Added">@context.AddedOn.LongToDateTime().Humanize()</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Class="my-4">No torrents found</MudText>
+        </NoRecordsContent>
+        <LoadingContent>
+            <MudText>Loading...</MudText>
+        </LoadingContent>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new[] {20, 50, 100}"/>
+        </PagerContent>
+    </MudTable>
+</MudStack>
+
+
+@code {
+    private MudTable<TorrentInfo>? _table;
+    private bool _loading = true;
+    private string? _searchString;
+    private IEnumerable<TorrentInfo>? _pagedData;
+    private int _totalItems;
+    private Timer? _timer;
+
+    protected override Task OnInitializedAsync()
+    {
+        _timer = new Timer(Callback, null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+        return base.OnInitializedAsync();
+    }
+
+    private async void Callback(object? _) => await RefreshTable();
+
+    private async Task RefreshTable()
+    {
+        _loading = true;
+        await InvokeAsync(() => _table!.ReloadServerData());
+    }
+
+    private async Task<TableData<TorrentInfo>> ServerReload(TableState state)
+    {
+        var paginationQuery = new Pagination
+        {
+            Page = state.Page,
+            PageSize = state.PageSize,
+            SortLabel = state.SortLabel,
+            SortDirection = (int)state.SortDirection,
+            SearchString = _searchString,
+        };
+
+        var result = await TorrentService.FetchTorrentData(paginationQuery);
+        _pagedData = result?.Torrents?.ToArray();
+        _totalItems = result?.Count ?? 0;
+        _loading = false;
+        return new TableData<TorrentInfo> {TotalItems = _totalItems, Items = _pagedData};
+    }
+
+    private void OnSearch(string text)
+    {
+        if (_searchString == text) return;
+        _searchString = text;
+        _table!.ReloadServerData();
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
+    private static string FormatProgress(double progress) => progress is 1 ? "Complete" : $"{progress * 100:N2}%";
+
+}

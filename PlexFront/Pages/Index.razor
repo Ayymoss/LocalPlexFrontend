@@ -1,0 +1,20 @@
+﻿@page "/"
+
+<PageTitle>Index</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small">
+    <MudPaper Class="pa-4 d-flex flex-column">
+        <MudGrid Class="pt-4 justify-center">
+            <MudItem md="12">
+                <MudText Typo="Typo.subtitle2"><MudIcon Icon="@Icons.Material.Filled.ChevronRight"/> Plex Requests</MudText>
+                <MudText Typo="Typo.body1">Access and request new series or movies on Plex!</MudText>
+                <MudLink Class="my-4" Href="https://request.amosr.uk">Request<MudIcon Icon="@Icons.Material.Rounded.KeyboardArrowRight" Size="Size.Small"/></MudLink>
+            </MudItem>
+            <MudItem md="12">
+                <MudText Typo="Typo.subtitle2"><MudIcon Icon="@Icons.Material.Filled.Download"/> Torrents</MudText>
+                <MudText Typo="Typo.body1">Access the recent requests torrents; monitor their progress.</MudText>
+                <MudLink Class="my-4" Href="/Torrents">Progress<MudIcon Icon="@Icons.Material.Rounded.KeyboardArrowRight" Size="Size.Small"/></MudLink>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
