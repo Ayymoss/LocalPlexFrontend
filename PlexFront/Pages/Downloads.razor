@@ -1,14 +1,14 @@
-﻿@page "/Torrents"
+﻿@page "/Downloads"
 @inject QBitTorrentService TorrentService
 
-<PageTitle>Torrents</PageTitle>
+<PageTitle>Downloads</PageTitle>
 
 <MudStack Spacing="0">
     <MudPaper Elevation="2" Class="d-flex flex-row align-center pa-4 rounded-b-0">
         <MudText Typo="Typo.h4"
                  Align="Align.Center"
                  Class="mud-text-secondary mr-4">
-            Torrents
+            Downloads
         </MudText>
         <MudSpacer/>
         <MudElement Class="ml-2 mt-0">
@@ -40,10 +40,17 @@
                 <MudTableSortLabel SortLabel="Name" T="TorrentInfo">Name</MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="TotalSize" T="TorrentInfo">Total Size</MudTableSortLabel>
+                <MudTableSortLabel SortLabel="TotalSize" T="TorrentInfo">
+                    <MudText Style="white-space: nowrap;" Typo="Typo.body2">Total Size</MudText>
+                </MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="DownloadSpeed" T="TorrentInfo">Download Speed</MudTableSortLabel>
+                <MudTableSortLabel SortLabel="AmountLeft" T="TorrentInfo">Remaining</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortLabel="DownloadSpeed" T="TorrentInfo">
+                    <MudText Style="white-space: nowrap;" Typo="Typo.body2">Download Speed</MudText>
+                </MudTableSortLabel>
             </MudTh>
             <MudTh>
                 <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortLabel="Progress" T="TorrentInfo">Progress</MudTableSortLabel>
@@ -65,9 +72,10 @@
             </MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Name">@TruncateWithEllipsis(context.Name)</MudTd>
             <MudTd DataLabel="TotalSize">@($"{context.TotalSize / Math.Pow(1024, 2):N2} MB")</MudTd>
-            <MudTd DataLabel="DownloadSpeed">@(context.Progress < 1 ? context.DownloadSpeed.HumanizeDownloadSpeed() : "Complete")</MudTd>
+            <MudTd DataLabel="AmountLeft">@FormatRemaining(context.AmountLeft)</MudTd>
+            <MudTd DataLabel="DownloadSpeed">@(context.Progress < 1 ? context.DownloadSpeed.HumanizeDownloadSpeed() : "N/A")</MudTd>
             <MudTd DataLabel="Progress">
                 <MudProgressLinear Style="width: 100%; min-width: 250px;"
                                    Color="@(context.Progress < 1 ? Color.Info : Color.Success)"
@@ -78,10 +86,10 @@
                     <MudText Typo="Typo.caption" Color="Color.Dark">@FormatProgress(context.Progress)</MudText>
                 </MudProgressLinear>
             </MudTd>
-            <MudTd DataLabel="ETA">@context.Eta.SecondsToTime().Humanize()</MudTd>
-            <MudTd DataLabel="State">@context.State.Titleize()</MudTd>
+            <MudTd DataLabel="ETA">@(context.Progress < 1 ? context.Eta.SecondsToTime().Humanize() : "N/A")</MudTd>
+            <MudTd DataLabel="State">@StateToString(context.State)</MudTd>
             <MudTd DataLabel="Category">@context.Category.Titleize()</MudTd>
-            <MudTd DataLabel="Availability">@($"{(context.Availability is not -1 ? context.Availability : "N/A"):N2}")</MudTd>
+            <MudTd DataLabel="Availability">@($"{(context.Progress < 1 ? context.Availability : "N/A"):N2}")</MudTd>
             <MudTd DataLabel="Added">@context.AddedOn.LongToDateTime().Humanize()</MudTd>
         </RowTemplate>
         <NoRecordsContent>
@@ -107,7 +115,7 @@
 
     protected override Task OnInitializedAsync()
     {
-        _timer = new Timer(Callback, null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+        _timer = new Timer(Callback, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
         return base.OnInitializedAsync();
     }
 
@@ -149,6 +157,41 @@
         _timer?.Dispose();
     }
 
+    private static string StateToString(string state)
+    {
+        var result = state switch
+        {
+            "error" => "Error",
+            "missingFiles" => "Missing Files",
+            "uploading" => "Complete",
+            "pausedUP" => "Complete",
+            "queuedUP" => "Complete",
+            "stalledUP" => "Complete",
+            "checkingUP" => "Complete",
+            "forcedUP" => "Complete",
+            "allocating" => "Allocating",
+            "downloading" => "Downloading",
+            "metaDL" => "Downloading Meta",
+            "pausedDL" => "Paused Download",
+            "queuedDL" => "Queued Download",
+            "stalledDL" => "Stalled Download",
+            "checkingDL" => "Checking Download",
+            "forcedDL" => "[F] Downloading",
+            "checkingResumeData" => "Checking Resume Data",
+            "moving" => "Moving",
+            _ => "Unknown"
+            };
+        return result;
+    }
+
+    private static string TruncateWithEllipsis(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+
+        return input.Length <= 32 ? input : input[..29] + "...";
+    }
+    
     private static string FormatProgress(double progress) => progress is 1 ? "Complete" : $"{progress * 100:N2}%";
+    private static string FormatRemaining(double remaining) => remaining is 0 ? "N/A" : $"{remaining / Math.Pow(1024, 2):N2} MB";
 
 }

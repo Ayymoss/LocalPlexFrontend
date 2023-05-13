@@ -1,20 +1,33 @@
 ﻿@page "/"
 
 <PageTitle>Index</PageTitle>
-
-<MudContainer MaxWidth="MaxWidth.Small">
-    <MudPaper Class="pa-4 d-flex flex-column">
-        <MudGrid Class="pt-4 justify-center">
-            <MudItem md="12">
-                <MudText Typo="Typo.subtitle2"><MudIcon Icon="@Icons.Material.Filled.ChevronRight"/> Plex Requests</MudText>
-                <MudText Typo="Typo.body1">Access and request new series or movies on Plex!</MudText>
-                <MudLink Class="my-4" Href="https://request.amosr.uk">Request<MudIcon Icon="@Icons.Material.Rounded.KeyboardArrowRight" Size="Size.Small"/></MudLink>
-            </MudItem>
-            <MudItem md="12">
-                <MudText Typo="Typo.subtitle2"><MudIcon Icon="@Icons.Material.Filled.Download"/> Torrents</MudText>
-                <MudText Typo="Typo.body1">Access the recent requests torrents; monitor their progress.</MudText>
-                <MudLink Class="my-4" Href="/Torrents">Progress<MudIcon Icon="@Icons.Material.Rounded.KeyboardArrowRight" Size="Size.Small"/></MudLink>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
+<MudContainer MaxWidth="MaxWidth.Large" Class="my-4 py-4">
+    <MudGrid Class="justify-center">
+        <MudItem xs="12" sm="6">
+            <MudCard Elevation="4">
+                <MudCardMedia Image="https://s1.eestatic.com/2023/02/13/omicrono/software/741186689_230883784_1706x960.jpg" Height="200"/>
+                <MudCardContent>
+                    <MudText Typo="Typo.h5">Plex Requests</MudText>
+                    <MudText Typo="Typo.body2">Fancy watching something specific?</MudText>
+                    <MudText Typo="Typo.body2">Access and request new series or movies on Plex!</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="https://request.amosr.uk" Target="_blank">Request</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudCard Elevation="4">
+                <MudCardMedia Image="https://colorlib.com/wp/wp-content/uploads/sites/2/digital-downloads-plugins.png" Height="200"/>
+                <MudCardContent>
+                    <MudText Typo="Typo.h5">Plex Downloads</MudText>
+                    <MudText Typo="Typo.body2">Recently requested something?</MudText>
+                    <MudText Typo="Typo.body2">Follow its progress live!</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/Downloads">Downloads</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
 </MudContainer>

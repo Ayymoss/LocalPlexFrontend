@@ -50,6 +50,7 @@ public class QBitTorrentService
                 "DownloadSpeed" => query.OrderByDirection((SortDirection)pagination.SortDirection!,
                     key => key.DownloadSpeed),
                 "Progress" => query.OrderByDirection((SortDirection)pagination.SortDirection!, key => key.Progress),
+                "AmountLeft" => query.OrderByDirection((SortDirection)pagination.SortDirection!, key => key.AmountLeft),
                 "ETA" => query.OrderByDirection((SortDirection)pagination.SortDirection!, key => key.Eta),
                 "State" => query.OrderByDirection((SortDirection)pagination.SortDirection!, key => key.State),
                 "Category" => query.OrderByDirection((SortDirection)pagination.SortDirection!, key => key.Category),
@@ -73,6 +74,7 @@ public class QBitTorrentService
                     Eta = torrent.Eta,
                     State = torrent.State,
                     Category = torrent.Category,
+                    AmountLeft = torrent.AmountLeft,
                     Availability = torrent.Availability,
                     TotalSize = torrent.TotalSize,
                     AddedOn = torrent.AddedOn
