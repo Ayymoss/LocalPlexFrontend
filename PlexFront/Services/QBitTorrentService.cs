@@ -78,7 +78,9 @@ public class QBitTorrentService
             if (torrents is null) return null;
 
             var query = torrents
-                .Where(x => x.Category.ToLower() is "tv-sonarr" or "movies-radarr")
+                .Where(x =>
+                    string.Equals(x.Category, _config.ShowsCategory, StringComparison.CurrentCultureIgnoreCase)
+                    || string.Equals(x.Category, _config.MovieCategory, StringComparison.CurrentCultureIgnoreCase))
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(pagination.SearchString))

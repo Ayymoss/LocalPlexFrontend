@@ -43,46 +43,46 @@ public static class Theme
             FontWeight = 600,
             LineHeight = 1.8,
         },
-        H4 = new H4()
+        H4 = new H4
         {
             FontSize = "1.8rem",
             FontWeight = 700,
         },
-        H5 = new H5()
+        H5 = new H5
         {
             FontSize = "1.8rem",
             FontWeight = 700,
             LineHeight = 2,
         },
-        H6 = new H6()
+        H6 = new H6
         {
             FontSize = "1.125rem",
             FontWeight = 700,
             LineHeight = 2,
         },
-        Subtitle1 = new Subtitle1()
+        Subtitle1 = new Subtitle1
         {
             FontSize = "1.1rem",
             FontWeight = 500
         },
-        Subtitle2 = new Subtitle2()
+        Subtitle2 = new Subtitle2
         {
             FontSize = "1rem",
             FontWeight = 600,
             LineHeight = 1.8,
         },
-        Body1 = new Body1()
+        Body1 = new Body1
         {
             FontSize = "1rem",
             FontWeight = 400
         },
-        Button = new Button()
+        Button = new Button
         {
             TextTransform = "none"
         }
     };
 
-    private static readonly Palette LandingPageLightPalette = new()
+    private static readonly PaletteLight LandingPageLightPalette = new()
     {
         AppbarText = "#c7c7c7",
         AppbarBackground = "rgba(21,21,33,0.98)",

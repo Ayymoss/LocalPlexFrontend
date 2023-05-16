@@ -6,5 +6,6 @@ public class Configuration
     public required long LocalDiskSize { get; set; }
     public required string QBitUsername { get; set; }
     public required string QBitPassword { get; set; }
-    
+    public required string ShowsCategory { get; set; }
+    public required string MovieCategory { get; set; }
 }

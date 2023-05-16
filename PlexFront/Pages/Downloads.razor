@@ -18,8 +18,8 @@
             {
                 <MudStack Justify="Justify.Center" Spacing="0">
                     <MudText Align="Align.Center" Typo="Typo.subtitle2">Local Availability</MudText>
-                    <MudProgressLinear Style="width: 500px;"
-                                       Color="@(_serverInfo.DiskUsage["root"].Percentage < 0.95 ? Color.Info : Color.Error)"
+                    <MudProgressLinear Style="height: 16px; width: 500px;"
+                                       Color="@(_serverInfo.DiskUsage["root"].Percentage < 0.90 ? Color.Info : Color.Error)"
                                        Rounded="true"
                                        Size="Size.Large"
                                        Value="@(_serverInfo.DiskUsage["root"].Used)"
@@ -32,8 +32,8 @@
             {
                 <MudStack Class="ml-2" Justify="Justify.Center" Spacing="0">
                     <MudText Align="Align.Center" Typo="Typo.subtitle2">Plex Availability</MudText>
-                    <MudProgressLinear Style="width: 500px;"
-                                       Color="@(_serverInfo.DiskUsage["media"].Percentage < 0.95 ? Color.Info : Color.Error)"
+                    <MudProgressLinear Style="height: 16px; width: 500px;"
+                                       Color="@(_serverInfo.DiskUsage["media"].Percentage < 0.90 ? Color.Info : Color.Error)"
                                        Rounded="true"
                                        Size="Size.Large"
                                        Value="@(_serverInfo.DiskUsage["media"].Used)"
@@ -136,13 +136,13 @@
                 <MudText Style="white-space: nowrap;" Typo="Typo.body2">@FormatDownload(context.Progress, context.DownloadSpeed)</MudText>
             </MudTd>
             <MudTd DataLabel="Progress">
-                <MudProgressLinear Style="width: 100%; min-width: 250px; transition: width 0.5s ease-in-out;"
+                <MudProgressLinear Style="height: 16px; width: 100%; min-width: 250px;"
                                    Color="@(context.Progress < 1 ? Color.Info : Color.Success)"
                                    Rounded="true"
                                    Striped="@(context.Progress < 1 && context.State.ToLower() != "pauseddl")"
                                    Size="Size.Large"
                                    Value="@(context.Progress * 100)">
-                    <MudText Typo="Typo.caption" Color="Color.Dark">@FormatProgress(context.Progress)</MudText>
+                    <MudText Class="mt-1" Typo="Typo.caption" Color="Color.Dark">@FormatProgress(context.Progress)</MudText>
                 </MudProgressLinear>
             </MudTd>
             <MudTd DataLabel="ETA">
@@ -152,7 +152,18 @@
                 <MudText Style="white-space: nowrap;" Typo="Typo.body2">@StateToString(context.State)</MudText>
             </MudTd>
             <MudTd DataLabel="Category">
-                <MudText Style="white-space: nowrap;" Typo="Typo.body2">@context.Category.Titleize()</MudText>
+                <MudStack Row="true" Spacing="2">
+                    @switch (context.Category)
+                    {
+                        case "shows":
+                            <MudIcon Icon="@Icons.Material.Filled.Tv" Color="Color.Primary" Size="Size.Small"/>
+                            break;
+                        case "movies":
+                            <MudIcon Icon="@Icons.Material.Filled.LocalMovies" Color="Color.Secondary" Size="Size.Small"/>
+                            break;
+                    }
+                    <MudText Style="white-space: nowrap;" Typo="Typo.body2">@context.Category.Titleize()</MudText>
+                </MudStack>
             </MudTd>
             <MudTd DataLabel="Availability">
                 <MudText Style="white-space: nowrap;" Typo="Typo.body2">@($"{(context.Progress < 1 ? context.Availability : "---"):N2}")</MudText>
