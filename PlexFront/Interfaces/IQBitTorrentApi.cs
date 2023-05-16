@@ -10,4 +10,7 @@ public interface IQbitTorrentApi
 
     [Get("/api/v2/torrents/info")]
     Task<HttpResponseMessage> GetTorrents();
+    
+    [Get("/api/v2/sync/maindata")]
+    Task<HttpResponseMessage> GetSystemState();
 }

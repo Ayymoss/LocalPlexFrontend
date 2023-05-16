@@ -2,7 +2,9 @@
 
 public class Configuration
 {
-    public required string ApiEndPoint { get; set; }
-    public required string Username { get; set; }
-    public required string Password { get; set; }
+    public required string QBitApiEndPoint { get; set; }
+    public required long LocalDiskSize { get; set; }
+    public required string QBitUsername { get; set; }
+    public required string QBitPassword { get; set; }
+    
 }

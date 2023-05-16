@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using PlexFront.Models;
 
 namespace PlexFront.Utilities;
 
@@ -11,7 +12,7 @@ public class Utilities
         return Assembly.GetCallingAssembly().GetName().Version?.ToString() ?? "Unknown";
     }
 
-    public static async Task<(double Total, double Used)?> GetUsedStoragePercentage()
+    public static async Task<Dictionary<string, Storage>?> GetUsedStoragePercentage()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return null;
 
@@ -32,21 +33,26 @@ public class Utilities
             process.Start();
             var output = await process.StandardOutput.ReadToEndAsync();
             await process.WaitForExitAsync();
-            
+
+            var spaceUsed = new Dictionary<string, Storage>();
             var lines = output.Split('\n');
             foreach (var line in lines)
             {
-                if (!line.Contains("/media")) continue;
-
+                // This is pretty fragile... but it works for now
                 var parts = line.Split(new[] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 6) continue;
+                if (parts[0] != "10.10.1.5:/volume1/Content") continue;
                 var total = double.Parse(parts[1]);
                 var used = double.Parse(parts[2]);
-                return (total, used);
+                var percentage = (float)(used / total);
+                spaceUsed.Add("media", new Storage(total, used, percentage));
             }
+
+            return spaceUsed;
         }
-        catch
+        catch (Exception e)
         {
-            return null;
+            Console.WriteLine($"Error getting storage info: {e}");
         }
 
         return null;

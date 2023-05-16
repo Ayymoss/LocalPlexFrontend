@@ -1,6 +1,7 @@
 ﻿using MudBlazor;
 using PlexFront.Interfaces;
 using PlexFront.Models;
+using PlexFront.Models.qBitApi;
 using PlexFront.Utilities;
 using RestEase;
 
@@ -16,7 +17,48 @@ public class QBitTorrentService
     {
         _config = config;
         _logger = logger;
-        _api = RestClient.For<IQbitTorrentApi>(config.ApiEndPoint);
+        _api = RestClient.For<IQbitTorrentApi>(config.QBitApiEndPoint);
+    }
+
+    public async Task<ServerInfo?> FetchServerState()
+    {
+        var loginData = new Dictionary<string, string>
+        {
+            {"username", _config.QBitUsername},
+            {"password", _config.QBitPassword}
+        };
+
+        await _api.Authenticate(loginData);
+
+        var responseMessage = await _api.GetSystemState();
+        var server = await responseMessage.DeserializeHttpResponseContentAsync<ServerStateInfo>();
+        var diskUsage = new Dictionary<string, Storage>();
+
+        // Get storage from qBit (can't do via df since qBit isn't localhost)
+        if (server?.ServerState is not null)
+        {
+            var used = _config.LocalDiskSize - server.ServerState.FreeSpaceOnDisk;
+            var percentage = used / (float)_config.LocalDiskSize;
+            var storage = new Storage(_config.LocalDiskSize, used, percentage);
+            diskUsage.Add("root", storage);
+        }
+
+        // Get relevant drives from DF
+        var storageFromDf = await Utilities.Utilities.GetUsedStoragePercentage();
+        if (storageFromDf != null)
+        {
+            foreach (var localStorage in storageFromDf)
+            {
+                diskUsage.Add(localStorage.Key, localStorage.Value);
+            }
+        }
+
+        var serverInfo = new ServerInfo
+        {
+            DiskUsage = diskUsage
+        };
+
+        return serverInfo;
     }
 
     public async Task<TorrentInfoContext?> FetchTorrentData(Pagination pagination)
@@ -25,8 +67,8 @@ public class QBitTorrentService
         {
             var loginData = new Dictionary<string, string>
             {
-                {"username", _config.Username},
-                {"password", _config.Password}
+                {"username", _config.QBitUsername},
+                {"password", _config.QBitPassword}
             };
 
             await _api.Authenticate(loginData);
@@ -41,7 +83,8 @@ public class QBitTorrentService
 
             if (!string.IsNullOrWhiteSpace(pagination.SearchString))
             {
-                query = query.Where(search => search.Name.Contains(pagination.SearchString));
+                query = query.Where(search => search.Name.ToLower()
+                    .Contains(pagination.SearchString));
             }
 
             query = pagination.SortLabel switch
