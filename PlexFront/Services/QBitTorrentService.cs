@@ -61,7 +61,7 @@ public class QBitTorrentService
         return serverInfo;
     }
 
-    public async Task<TorrentInfoContext?> FetchTorrentData(Pagination pagination)
+    public async Task<DownloadContext?> FetchTorrentData(Pagination pagination)
     {
         try
         {
@@ -100,8 +100,7 @@ public class QBitTorrentService
                 "State" => query.OrderByDirection((SortDirection)pagination.SortDirection!, key => key.State),
                 "Category" => query.OrderByDirection((SortDirection)pagination.SortDirection!, key => key.Category),
                 "TotalSize" => query.OrderByDirection((SortDirection)pagination.SortDirection!, key => key.TotalSize),
-                "Availability" => query.OrderByDirection((SortDirection)pagination.SortDirection!,
-                    key => key.Availability),
+                "Ratio" => query.OrderByDirection((SortDirection)pagination.SortDirection!, key => key.Ratio),
                 "Added" => query.OrderByDirection((SortDirection)pagination.SortDirection!, key => key.AddedOn),
                 _ => query
             };
@@ -111,7 +110,7 @@ public class QBitTorrentService
             var pagedData = query
                 .Skip(pagination.Page!.Value * pagination.PageSize!.Value)
                 .Take(pagination.PageSize.Value)
-                .Select(torrent => new TorrentInfo
+                .Select(torrent => new Download
                 {
                     Name = torrent.Name,
                     DownloadSpeed = torrent.DownloadSpeed,
@@ -122,13 +121,69 @@ public class QBitTorrentService
                     AmountLeft = torrent.AmountLeft,
                     Availability = torrent.Availability,
                     TotalSize = torrent.TotalSize,
-                    AddedOn = torrent.AddedOn
+                    AddedOn = torrent.AddedOn,
+                    CompletionOn = torrent.CompletionOn,
+                    Ratio = torrent.Ratio,
+                    MaxRatio = torrent.MaxRatio
                 }).ToList();
 
-            var context = new TorrentInfoContext
+            var context = new DownloadContext
             {
                 Count = dataSize,
-                Torrents = pagedData
+                Downloads = pagedData
+            };
+
+            return context;
+        }
+        catch (Exception e)
+        {
+            _logger.LogCritical("Failed to get torrents from API {Error}", e);
+        }
+
+        return null;
+    }
+
+    public async Task<DownloadContext?> FetchLimitedTorrentData(Pagination pagination)
+    {
+        try
+        {
+            var loginData = new Dictionary<string, string>
+            {
+                {"username", _config.QBitUsername},
+                {"password", _config.QBitPassword}
+            };
+
+            await _api.Authenticate(loginData);
+
+            var responseMessage = await _api.GetTorrents();
+            var torrents = await responseMessage.DeserializeHttpResponseContentAsync<List<TorrentInfo>>();
+            if (torrents is null) return null;
+
+            var query = torrents.Where(x =>
+                    string.Equals(x.Category, _config.ShowsCategory, StringComparison.CurrentCultureIgnoreCase)
+                    || string.Equals(x.Category, _config.MovieCategory, StringComparison.CurrentCultureIgnoreCase))
+                .Where(x => x.CompletionOn is 0)
+                .OrderByDirection(SortDirection.Descending, key => key.AddedOn)
+                .AsQueryable();
+
+            var dataSize = query.Count();
+
+            var pagedData = query
+                .Skip(pagination.Page!.Value * pagination.PageSize!.Value)
+                .Take(pagination.PageSize.Value)
+                .Select(torrent => new Download
+                {
+                    Name = torrent.Name,
+                    Progress = torrent.Progress,
+                    Eta = torrent.Eta,
+                    State = torrent.State,
+                    Category = torrent.Category
+                }).ToList();
+
+            var context = new DownloadContext
+            {
+                Count = dataSize,
+                Downloads = pagedData
             };
 
             return context;

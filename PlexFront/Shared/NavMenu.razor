@@ -1,4 +1,6 @@
-﻿<MudPaper Class="d-flex flex-column" Height="100%" Elevation="0">
+﻿@inject QBitTorrentService TorrentService
+
+<MudPaper Class="d-flex flex-column" Height="100%" Elevation="0">
     <MudNavMenu Rounded="true" Margin="Margin.Normal" Color="Color.Info" Class="pa-2">
         <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
         <MudNavLink Href="/Downloads" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Download">All Downloads</MudNavLink>
@@ -6,10 +8,44 @@
     </MudNavMenu>
     <MudSpacer/>
     <MudStack Spacing="0">
-        <MudText Typo="Typo.caption" Align="Align.Center" Class="">Made by Amos</MudText>
+        @if (_serverInfo?.DiskUsage is not null)
+        {
+            @if (_serverInfo.DiskUsage.ContainsKey("root"))
+            {
+                <MudStack Justify="Justify.Center" Spacing="0">
+                    <MudText Align="Align.Center" Typo="Typo.subtitle2">Downloads Storage</MudText>
+                    <MudElement Class="px-2 pb-2 d-flex">
+                        <MudProgressLinear Style="height: 16px;"
+                                           Color="@(_serverInfo.DiskUsage["root"].Percentage < 0.90 ? Color.Info : Color.Error)"
+                                           Rounded="true"
+                                           Size="Size.Large"
+                                           Value="@(_serverInfo.DiskUsage["root"].Used)"
+                                           Max="@(_serverInfo.DiskUsage["root"].Total)">
+                            <MudText Class="mt-1" Typo="Typo.caption" Color="Color.Dark">@($"{_serverInfo.DiskUsage["root"].Used / Math.Pow(1024, 3):N2}/{_serverInfo.DiskUsage["root"].Total / Math.Pow(1024, 3):N2} GiB")</MudText>
+                        </MudProgressLinear>
+                    </MudElement>
+                </MudStack>
+            }
+            @if (_serverInfo.DiskUsage.ContainsKey("media"))
+            {
+                <MudStack Justify="Justify.Center" Spacing="0">
+                    <MudText Align="Align.Center" Typo="Typo.subtitle2">Plex Storage</MudText>
+                    <MudElement Class="px-2 pb-2 d-flex">
+                        <MudProgressLinear Style="height: 16px;"
+                                           Color="@(_serverInfo.DiskUsage["media"].Percentage < 0.90 ? Color.Info : Color.Error)"
+                                           Rounded="true"
+                                           Size="Size.Large"
+                                           Value="@(_serverInfo.DiskUsage["media"].Used)"
+                                           Max="@(_serverInfo.DiskUsage["media"].Total)">
+                            <MudText Class="mt-1" Typo="Typo.caption" Color="Color.Dark">@($"{_serverInfo.DiskUsage["media"].Used * 1024 / Math.Pow(1024, 4):N2}/{_serverInfo.DiskUsage["media"].Total * 1024 / Math.Pow(1024, 4):N2} TiB")</MudText>
+                        </MudProgressLinear>
+                    </MudElement>
+                </MudStack>
+            }
+        }
         <MudDivider Class="mb-1" FlexItem="true" Light="true" DividerType="DividerType.FullWidth"/>
         <MudElement Class="d-inline-flex align-center mx-2 mb-1">
-            <MudText Typo="Typo.caption" Class="mud-text-disabled">Plexmos</MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-disabled">Plex Tracker</MudText>
             <MudSpacer/>
             <MudText Typo="Typo.caption" Class="mud-text-disabled">@_versionNumber</MudText>
         </MudElement>
@@ -18,5 +54,12 @@
 </MudPaper>
 
 @code {
+    private ServerInfo? _serverInfo;
     private string _versionNumber = Utilities.GetVersionAsString();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _serverInfo = await TorrentService.FetchServerState();
+    }
+
 }

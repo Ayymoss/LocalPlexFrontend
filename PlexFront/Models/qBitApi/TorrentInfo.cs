@@ -2,11 +2,6 @@
 
 namespace PlexFront.Models.qBitApi;
 
-public class TorrentInfoContext
-{
-    public int Count { get; set; }
-    public List<TorrentInfo>? Torrents { get; set; }
-}
 
 public class TorrentInfo
 {

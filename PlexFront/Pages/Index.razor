@@ -1,8 +1,10 @@
 ﻿@page "/"
+@inject QBitTorrentService TorrentService
+@inject IBreakpointService BreakpointService
 
 <PageTitle>Index</PageTitle>
-<MudContainer MaxWidth="MaxWidth.Large" Class="my-4 py-4">
-    <MudGrid Class="justify-center">
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid Class="justify-center mb-4">
         <MudItem xs="12" sm="6">
             <MudCard Elevation="4">
                 <MudCardMedia Image="https://s1.eestatic.com/2023/02/13/omicrono/software/741186689_230883784_1706x960.jpg" Height="200"/>
@@ -16,18 +18,145 @@
                 </MudCardActions>
             </MudCard>
         </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudCard Elevation="4">
-                <MudCardMedia Image="https://colorlib.com/wp/wp-content/uploads/sites/2/digital-downloads-plugins.png" Height="200"/>
-                <MudCardContent>
-                    <MudText Typo="Typo.h5">Plex Downloads</MudText>
-                    <MudText Typo="Typo.body2">Recently requested something?</MudText>
-                    <MudText Typo="Typo.body2">Follow its progress live!</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/Downloads">Downloads</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
     </MudGrid>
+    <MudStack Spacing="0">
+        <MudPaper Elevation="4" Class="d-flex flex-row align-center pa-4 rounded-b-0 justify-center">
+            <MudText Typo="Typo.h4"
+                     Align="Align.Center"
+                     Class="mud-text-secondary">
+                Active Downloads
+            </MudText>
+        </MudPaper>
+        <MudTable Striped="true"
+                  HeaderClass="mud-theme-info"
+                  Outlined="false"
+                  Bordered="false"
+                  Loading="_loading"
+                  LoadingProgressColor="Color.Info"
+                  ServerData="@(new Func<TableState, Task<TableData<Download>>>(ServerReload))"
+                  Elevation="4"
+                  RowsPerPage="20"
+                  Dense="true"
+                  @ref="_table">
+            <HeaderContent>
+                <MudTh Class="py-2">
+                    <MudStack Row="true" Spacing="1">
+                        <MudText Typo="Typo.body2">Name</MudText>
+                        <MudTooltip Arrow="true" Placement="Placement.Top" Text="Hover over filename to see fullname" RootClass="d-flex">
+                            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Info"/>
+                        </MudTooltip>
+                    </MudStack>
+                </MudTh>
+                <MudTh>Progress</MudTh>
+                <MudTh>ETA</MudTh>
+                <MudTh>Category</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">
+                    <MudTooltip Arrow="true" Placement="Placement.Top">
+                        <ChildContent>
+                            <MudText Style="white-space: nowrap;" Typo="Typo.body2">@context.Name.TruncateWithEllipsis(_breakpoint)</MudText>
+                        </ChildContent>
+                        <TooltipContent>
+                            @foreach (var line in context.Name.GetSplitLines())
+                            {
+                                <MudText Typo="Typo.body2">@line</MudText>
+                            }
+                        </TooltipContent>
+                    </MudTooltip>
+                </MudTd>
+                <MudTd DataLabel="Progress">
+                    <MudProgressLinear Style="height: 16px; width: 100%; min-width: 200px;"
+                                       Color="@(context.Progress < 1 ? Color.Info : Color.Success)"
+                                       Rounded="true"
+                                       Striped="@(context.Progress < 1 && context.State.ToLower() != "pauseddl")"
+                                       Size="Size.Large"
+                                       Value="@(context.Progress * 100)">
+                        <MudText Class="mt-1" Typo="Typo.caption" Color="Color.Dark">@FormatProgress(context.Progress)</MudText>
+                    </MudProgressLinear>
+                </MudTd>
+                <MudTd DataLabel="ETA">
+                    <MudText Style="white-space: nowrap;" Typo="Typo.body2">@(context.Progress < 1 ? context.Eta.SecondsToTime().Humanize() : "---")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Category">
+                    <MudStack Row="true" Spacing="2">
+                        @switch (context.Category)
+                        {
+                            case "shows":
+                                <MudIcon Icon="@Icons.Material.Filled.Tv" Color="Color.Primary" Size="Size.Small"/>
+                                break;
+                            case "movies":
+                                <MudIcon Icon="@Icons.Material.Filled.LocalMovies" Color="Color.Secondary" Size="Size.Small"/>
+                                break;
+                        }
+                        <MudText Style="white-space: nowrap;" Typo="Typo.body2">@context.Category.Titleize()</MudText>
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="my-4 mx-4">No active downloads. For more info navigate to Downloads.</MudText>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText>Loading...</MudText>
+            </LoadingContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new[] {20, 50, 100}"/>
+            </PagerContent>
+        </MudTable>
+    </MudStack>
 </MudContainer>
+
+@code {
+    private MudTable<Download>? _table;
+    private bool _loading = true;
+    private IEnumerable<Download>? _pagedData;
+    private int _totalItems;
+    private Timer? _timer;
+    private Breakpoint _breakpoint;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _breakpoint = await BreakpointService.GetBreakpoint();
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _timer = new Timer(Callback, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+    }
+
+    private async void Callback(object? _) => await RefreshTable();
+
+    private async Task RefreshTable()
+    {
+        _loading = true;
+        await InvokeAsync(() => _table!.ReloadServerData());
+    }
+
+    private async Task<TableData<Download>> ServerReload(TableState state)
+    {
+        var paginationQuery = new Pagination
+        {
+            Page = state.Page,
+            PageSize = state.PageSize,
+            SortLabel = state.SortLabel,
+        };
+
+        var result = await TorrentService.FetchLimitedTorrentData(paginationQuery);
+
+        _pagedData = result?.Downloads?.ToArray();
+        _totalItems = result?.Count ?? 0;
+        _loading = false;
+        return new TableData<Download> {TotalItems = _totalItems, Items = _pagedData};
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
+    private static string FormatProgress(double progress) => progress is 1 ? "Complete" : $"{progress * 100:N2}%";
+}

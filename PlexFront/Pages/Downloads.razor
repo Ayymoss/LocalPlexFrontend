@@ -2,7 +2,7 @@
 @inject QBitTorrentService TorrentService
 @inject IBreakpointService BreakpointService
 
-<PageTitle>Downloads</PageTitle>
+<PageTitle>All Downloads</PageTitle>
 
 <MudStack Spacing="0">
     <MudPaper Elevation="2" Class="d-flex flex-row align-center pa-4 rounded-b-0">
@@ -11,38 +11,6 @@
                  Class="mud-text-secondary mr-4">
             Downloads
         </MudText>
-        @if (_serverInfo?.DiskUsage is not null && _breakpoint is Breakpoint.Xl or Breakpoint.Xxl)
-        {
-            <MudSpacer/>
-            @if (_serverInfo.DiskUsage.ContainsKey("root"))
-            {
-                <MudStack Justify="Justify.Center" Spacing="0">
-                    <MudText Align="Align.Center" Typo="Typo.subtitle2">Local Availability</MudText>
-                    <MudProgressLinear Style="height: 16px; width: 500px;"
-                                       Color="@(_serverInfo.DiskUsage["root"].Percentage < 0.90 ? Color.Info : Color.Error)"
-                                       Rounded="true"
-                                       Size="Size.Large"
-                                       Value="@(_serverInfo.DiskUsage["root"].Used)"
-                                       Max="@(_serverInfo.DiskUsage["root"].Total)">
-                        <MudText Class="mt-1" Typo="Typo.caption" Color="Color.Dark">@($"{_serverInfo.DiskUsage["root"].Used / Math.Pow(1024, 3):N2}/{_serverInfo.DiskUsage["root"].Total / Math.Pow(1024, 3):N2} GiB")</MudText>
-                    </MudProgressLinear>
-                </MudStack>
-            }
-            @if (_serverInfo.DiskUsage.ContainsKey("media"))
-            {
-                <MudStack Class="ml-2" Justify="Justify.Center" Spacing="0">
-                    <MudText Align="Align.Center" Typo="Typo.subtitle2">Plex Availability</MudText>
-                    <MudProgressLinear Style="height: 16px; width: 500px;"
-                                       Color="@(_serverInfo.DiskUsage["media"].Percentage < 0.90 ? Color.Info : Color.Error)"
-                                       Rounded="true"
-                                       Size="Size.Large"
-                                       Value="@(_serverInfo.DiskUsage["media"].Used)"
-                                       Max="@(_serverInfo.DiskUsage["media"].Total)">
-                        <MudText Class="mt-1" Typo="Typo.caption" Color="Color.Dark">@($"{_serverInfo.DiskUsage["media"].Used * 1024 / Math.Pow(1024, 4):N2}/{_serverInfo.DiskUsage["media"].Total * 1024 / Math.Pow(1024, 4):N2} TiB")</MudText>
-                    </MudProgressLinear>
-                </MudStack>
-            }
-        }
         <MudSpacer/>
         <MudElement Class="ml-2 mt-0">
             <MudTextField T="string"
@@ -63,14 +31,14 @@
               Bordered="false"
               Loading="_loading"
               LoadingProgressColor="Color.Info"
-              ServerData="@(new Func<TableState, Task<TableData<TorrentInfo>>>(ServerReload))"
+              ServerData="@(new Func<TableState, Task<TableData<Download>>>(ServerReload))"
               Elevation="2"
               RowsPerPage="20"
               Dense="true"
               @ref="_table">
         <HeaderContent>
             <MudTh Class="py-2">
-                <MudTableSortLabel SortLabel="Name" T="TorrentInfo">
+                <MudTableSortLabel SortLabel="Name" T="Download">
                     <MudText Typo="Typo.body2" Class="mr-1">Name</MudText>
                     <MudTooltip Arrow="true" Placement="Placement.Top" Text="Hover over filename to see fullname" RootClass="d-flex">
                         <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Info"/>
@@ -78,38 +46,38 @@
                 </MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="TotalSize" T="TorrentInfo">
+                <MudTableSortLabel SortLabel="TotalSize" T="Download">
                     <MudText Style="white-space: nowrap;" Typo="Typo.body2">Total Size</MudText>
                 </MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="AmountLeft" T="TorrentInfo">Remaining</MudTableSortLabel>
+                <MudTableSortLabel SortLabel="AmountLeft" T="Download">Remaining</MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="DownloadSpeed" T="TorrentInfo">
+                <MudTableSortLabel SortLabel="DownloadSpeed" T="Download">
                     <MudText Style="white-space: nowrap;" Typo="Typo.body2">@_totalDownloadSpeed</MudText>
                 </MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="Progress" T="TorrentInfo">Progress</MudTableSortLabel>
+                <MudTableSortLabel SortLabel="Progress" T="Download">Progress</MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="ETA" T="TorrentInfo">ETA</MudTableSortLabel>
+                <MudTableSortLabel SortLabel="ETA" T="Download">ETA</MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="State" T="TorrentInfo">State</MudTableSortLabel>
+                <MudTableSortLabel SortLabel="State" T="Download">State</MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="Category" T="TorrentInfo">Category</MudTableSortLabel>
+                <MudTableSortLabel SortLabel="Category" T="Download">Category</MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="Availability" T="TorrentInfo">Availability</MudTableSortLabel>
+                <MudTableSortLabel SortLabel="Ratio" T="Download">Ratio</MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel InitialDirection="SortDirection.Descending" SortLabel="Added" T="TorrentInfo">Added</MudTableSortLabel>
+                <MudTableSortLabel InitialDirection="SortDirection.Descending" SortLabel="Added" T="Download">Added</MudTableSortLabel>
             </MudTh>
             <MudTh>
-                <MudTableSortLabel SortLabel="ETA" T="TorrentInfo">Deletion</MudTableSortLabel>
+                <MudTableSortLabel SortLabel="ETA" T="Download">Deletion</MudTableSortLabel>
             </MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -119,7 +87,7 @@
                         <MudText Style="white-space: nowrap;" Typo="Typo.body2">@context.Name.TruncateWithEllipsis(_breakpoint)</MudText>
                     </ChildContent>
                     <TooltipContent>
-                        @foreach (var line in  context.Name.GetSplitLines())
+                        @foreach (var line in context.Name.GetSplitLines())
                         {
                             <MudText Typo="Typo.body2">@line</MudText>
                         }
@@ -165,18 +133,18 @@
                     <MudText Style="white-space: nowrap;" Typo="Typo.body2">@context.Category.Titleize()</MudText>
                 </MudStack>
             </MudTd>
-            <MudTd DataLabel="Availability">
-                <MudText Style="white-space: nowrap;" Typo="Typo.body2">@($"{(context.Progress < 1 ? context.Availability : "---"):N2}")</MudText>
+            <MudTd DataLabel="Ratio">
+                <MudText Style="white-space: nowrap;" Typo="Typo.body2">@FormatRatio(context.Ratio, context.MaxRatio, context.Availability, context.Progress)</MudText>
             </MudTd>
             <MudTd DataLabel="Added">
                 <MudText Style="white-space: nowrap;" Typo="Typo.body2">@context.AddedOn.LongToDateTime().Humanize()</MudText>
             </MudTd>
-            <MudTd DataLabel="ETA">
+            <MudTd DataLabel="Deletion">
                 <MudText Style="white-space: nowrap;" Typo="Typo.body2">@(context.Progress < 1 ? "---" : $"in {context.Eta.SecondsToTime().Humanize()}")</MudText>
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
-            <MudText Class="my-4">No torrents found</MudText>
+            <MudText Class="my-4">No downloads found</MudText>
         </NoRecordsContent>
         <LoadingContent>
             <MudText>Loading...</MudText>
@@ -188,15 +156,14 @@
 </MudStack>
 
 @code {
-    private MudTable<TorrentInfo>? _table;
+    private MudTable<Download>? _table;
     private bool _loading = true;
     private string? _searchString;
-    private IEnumerable<TorrentInfo>? _pagedData;
+    private IEnumerable<Download>? _pagedData;
     private int _totalItems;
     private Timer? _timer;
     private Breakpoint _breakpoint;
     private string _totalDownloadSpeed = "Download";
-    private ServerInfo? _serverInfo;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -209,7 +176,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _serverInfo = await TorrentService.FetchServerState();
         _timer = new Timer(Callback, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
     }
 
@@ -221,7 +187,7 @@
         await InvokeAsync(() => _table!.ReloadServerData());
     }
 
-    private async Task<TableData<TorrentInfo>> ServerReload(TableState state)
+    private async Task<TableData<Download>> ServerReload(TableState state)
     {
         var paginationQuery = new Pagination
         {
@@ -233,13 +199,13 @@
         };
 
         var result = await TorrentService.FetchTorrentData(paginationQuery);
-        var speedTotal = result?.Torrents?.Sum(x => x.DownloadSpeed);
+        var speedTotal = result?.Downloads?.Sum(x => x.DownloadSpeed);
         _totalDownloadSpeed = speedTotal is 0 or null ? "Download" : $"Download ({speedTotal * (8 / Math.Pow(1024, 2)):F2} Mbps)";
 
-        _pagedData = result?.Torrents?.ToArray();
+        _pagedData = result?.Downloads?.ToArray();
         _totalItems = result?.Count ?? 0;
         _loading = false;
-        return new TableData<TorrentInfo> {TotalItems = _totalItems, Items = _pagedData};
+        return new TableData<Download> {TotalItems = _totalItems, Items = _pagedData};
     }
 
     private void OnSearch(string text)
@@ -284,4 +250,8 @@
     private static string FormatProgress(double progress) => progress is 1 ? "Complete" : $"{progress * 100:N2}%";
     private static string FormatRemaining(double remaining) => remaining is 0 ? "---" : $"{remaining / Math.Pow(1024, 2):N2} MiB";
     private static string FormatDownload(double progress, double download) => progress is 1 ? "---" : $"{download * (8 / Math.Pow(1024, 2)):F2} Mbps";
+
+    private static string FormatRatio(float ratio, double maxRatio, double availability, double progress) =>
+        progress < 1 ? $"Av. {availability:N2}" : $"{ratio:N2}/{maxRatio:N2}";
+
 }

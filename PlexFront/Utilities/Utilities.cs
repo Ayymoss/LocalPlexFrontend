@@ -5,7 +5,7 @@ using PlexFront.Models;
 
 namespace PlexFront.Utilities;
 
-public class Utilities
+public static class Utilities
 {
     public static string GetVersionAsString()
     {
